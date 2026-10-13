@@ -1,0 +1,43 @@
+{
+  "name": "assignment2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "ts-node src/server.ts",
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Whitewolf128/assignment2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Whitewolf128/assignment2/issues"
+  },
+  "homepage": "https://github.com/Whitewolf128/assignment2#readme",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^26.6.5",
+    "@types/supertest": "^7.2.1",
+    "jest": "^25.0.0",
+    "supertest": "^7.3.1",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "morgan": "^1.12.1"
+  }
+}
