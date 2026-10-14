@@ -91,3 +91,15 @@ export const updateTicketController = async (req: Request, res: Response): Promi
         });
     }
 };
+
+export const deleteTicketController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const {id} = req.params;
+        await ticketService.deleteTicket(Number(id));
+        res.status(HTTP_STATUS.OK).json({
+            message: "Ticket deleted successfully",
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
