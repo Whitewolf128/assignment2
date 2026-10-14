@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { HTTP_STATUS } from "../../../constants/httpConstants";
 import * as ticketService from "../services/ticketService";
 import { Ticket } from "../models/ticketModel";
-import { createTicket, getAllTickets, updateTicket, deleteTicket } from "../services/ticketService";
+import { createTicket, getAllTickets } from "../services/ticketService";
 
 
 export const getAllTicketsController = async (
