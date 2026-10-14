@@ -31,3 +31,23 @@ export const createTicket = async (
   return newTicket;
 };
 
+/**
+ * Updates an existing ticket
+ * @param id - The ID of the ticket to update
+ * @param ticketData - The fields to update
+ * @returns The updated ticket
+ * @throws Error if ticket with given ID is not found
+ */
+export const updateTicket = async (
+  id: number,
+  ticketData: Partial<Ticket> 
+): Promise<Ticket | null> => {
+  const ticketIndex = tickets.findIndex((t) => t.id === id);
+  if (ticketIndex <= -1) {
+    throw new Error('Ticket not found');
+}
+
+  tickets[ticketIndex] = { ...tickets[ticketIndex], ...ticketData };
+  return tickets[ticketIndex];
+};
+
