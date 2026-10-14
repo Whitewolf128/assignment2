@@ -66,6 +66,28 @@ export const createTicketController = async (req: Request, res: Response, next: 
     }
 };
 
+export const updateTicketController = async (req: Request, res: Response): Promise<void> => {
+    try{
+        const {id} = req.params;
+        const {title, description, priority, baseScore, status} = req.body;
+        const updateData = {title, description, priority, baseScore, status};
 
+        const updateTicket = await ticketService.updateTicket(Number(id), updateData);
+        if (updateTicket === null) {
+            res.status(HTTP_STATUS.NOT_FOUND).json({
+                message: "Ticket not found"
+            });
+            return;
+        }
 
-        
+        res.status(HTTP_STATUS.OK).json({
+            message: "Ticket updated successfully",
+            data: updateTicket
+        });
+    }
+    catch (error: unknown) {
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            message: "Failed to update ticket"
+        });
+    }
+};
