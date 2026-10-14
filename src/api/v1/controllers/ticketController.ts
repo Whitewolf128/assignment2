@@ -28,3 +28,44 @@ export const getAllTicketsController = async (
         });
     }
 };
+
+export const createTicketController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try{
+        const{
+            id,
+            title,
+            description,
+            priority,
+            baseScore,
+            status,
+            createdAt
+        } = req.body;
+
+        const ticket: Ticket =
+        {
+            id,
+            title,
+            description,
+            priority,
+            baseScore,
+            status,
+            createdAt
+        };
+        const createdTicket: Ticket = await createTicket(ticket);
+
+        res.status(HTTP_STATUS.CREATED).json({
+            message: "Ticket created successfully",
+            data: createdTicket
+        });
+    }
+    catch (error: unknown)
+    {
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            message: "Failed to create ticket"
+        });
+    }
+};
+
+
+
+        
