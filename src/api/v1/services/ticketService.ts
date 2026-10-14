@@ -51,3 +51,15 @@ export const updateTicket = async (
   return tickets[ticketIndex];
 };
 
+/**
+ * Deletes an event from storage
+ * @param id - The ID of the event to delete
+ * @throws Error if event with given ID is not found
+ */
+export const deleteTicket = async (id: number): Promise<void> => {
+    const ticketIndex = tickets.findIndex((ticket: Ticket) => ticket.id === id);
+    if (ticketIndex === -1) {
+        throw new Error('Ticket not found');
+    }
+    tickets.splice(ticketIndex, 1);
+}
