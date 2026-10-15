@@ -7,7 +7,6 @@ export interface Ticket {
     title: string; // Title of the ticket
     description: string; // Detailed description of the issue
     priority: string;
-    baseScore: number; // Base score of the ticket
     status: string; // Status of the ticket
     createdAt: Date; // Timestamp when the ticket was created
     ticketAge: number; // Age of the ticket in days

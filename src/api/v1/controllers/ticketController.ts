@@ -29,6 +29,29 @@ export const getAllTicketsController = async (
     }
 };
 
+export const getTicketByIdController = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+        const tickets = await ticketService.getTicketById(Number(id));
+        if (tickets.length === 0) {
+            res.status(HTTP_STATUS.NOT_FOUND).json({
+                message: "Ticket not found"
+            });
+            return;
+        }
+        res.status(HTTP_STATUS.OK).json({
+            message: "Ticket retrieved",
+            data: tickets[0]
+        });
+    } catch (error: unknown) {
+        next(error);
+    }
+};
+
 export const createTicketController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try{
         const{
@@ -36,7 +59,6 @@ export const createTicketController = async (req: Request, res: Response, next: 
             title,
             description,
             priority,
-            baseScore,
             status,
             createdAt,
             ticketAge,
@@ -50,7 +72,6 @@ export const createTicketController = async (req: Request, res: Response, next: 
             title,
             description,
             priority,
-            baseScore,
             status,
             createdAt,
             ticketAge,
@@ -75,8 +96,8 @@ export const createTicketController = async (req: Request, res: Response, next: 
 export const updateTicketController = async (req: Request, res: Response): Promise<void> => {
     try{
         const {id} = req.params;
-        const {title, description, priority, baseScore, status} = req.body;
-        const updateData = {title, description, priority, baseScore, status};
+        const {title, description, priority, status} = req.body;
+        const updateData = {title, description, priority, status};
 
         const updateTicket = await ticketService.updateTicket(Number(id), updateData);
         if (updateTicket === null) {

@@ -1,6 +1,14 @@
 import { Ticket } from '../models/ticketModel';
 
 const tickets: Ticket[] = [];
+const PRIORITY_SCORES: Record<string, number> = {
+  low: 10,
+  medium: 20,
+  high: 30,
+  critical: 50,
+};
+const TICKET_AGE_MULTIPLIER = 5;
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
  * Retrieves all tickets from storage
@@ -8,6 +16,33 @@ const tickets: Ticket[] = [];
  */
 export const getAllTickets = async (): Promise<Ticket[]> => {
   return [...tickets];
+};
+
+export const getTicketById = async (id: number): Promise<Ticket[]> => {
+  const ticket = tickets.find((t) => t.id === id);
+  if (!ticket) {
+    return [];
+  }
+
+  const priorityScore = PRIORITY_SCORES[ticket.priority];
+  if (priorityScore === undefined) {
+    throw new Error(`Invalid ticket priority: ${ticket.priority}`);
+  }
+
+  const ticketAge = ticket.ticketAge ?? (() => {
+    const createdAtTimestamp = Date.parse(String(ticket.createdAt));
+    if (Number.isNaN(createdAtTimestamp)) {
+      throw new Error(`Invalid ticket creation date: ${ticket.createdAt}`);
+    }
+
+    return Math.max(0, Math.floor((Date.now() - createdAtTimestamp) / MILLISECONDS_PER_DAY));
+  })();
+
+  return [{
+    ...ticket,
+    ticketAge,
+    urgencyScore: ticketAge * TICKET_AGE_MULTIPLIER + priorityScore,
+  }];
 };
 
 /**
