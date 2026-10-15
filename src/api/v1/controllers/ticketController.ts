@@ -38,7 +38,10 @@ export const createTicketController = async (req: Request, res: Response, next: 
             priority,
             baseScore,
             status,
-            createdAt
+            createdAt,
+            ticketAge,
+            urgencyScore,
+            UrgencyLevel
         } = req.body;
 
         const ticket: Ticket =
@@ -49,7 +52,10 @@ export const createTicketController = async (req: Request, res: Response, next: 
             priority,
             baseScore,
             status,
-            createdAt
+            createdAt,
+            ticketAge,
+            urgencyScore,
+            UrgencyLevel
         };
         const createdTicket: Ticket = await createTicket(ticket);
 

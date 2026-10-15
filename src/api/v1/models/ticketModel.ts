@@ -10,4 +10,7 @@ export interface Ticket {
     baseScore: number; // Base score of the ticket
     status: string; // Status of the ticket
     createdAt: Date; // Timestamp when the ticket was created
+    ticketAge: number; // Age of the ticket in days
+    urgencyScore: number; // Calculated urgency score based on priority and age
+    UrgencyLevel: string; // Urgency level derived from the urgency score
 }
