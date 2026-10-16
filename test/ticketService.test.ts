@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { createTicket, getAllTickets, getTicketById } from '../src/api/v1/services/ticketService';
+import { createTicket, deleteTicket, getAllTickets, getTicketById } from '../src/api/v1/services/ticketService';
 
 describe('getTicketById urgency score', () => {
   it.each([
@@ -101,5 +101,88 @@ describe('getTicketById urgency score', () => {
     const storedTicket = (await getAllTickets()).find(({ id }) => id === ticket.id);
 
     expect(storedTicket).not.toHaveProperty('urgencyScore');
+  });
+});
+
+describe('getAllTickets', () => {
+  it('returns all tickets without urgency properties', async () => {
+    await createTicket({
+      title: 'Ticket 1',
+      description: 'First ticket',
+      priority: 'low',
+      ticketAge: 1,
+    });
+    await createTicket({
+      title: 'Ticket 2',
+      description: 'Second ticket',
+      priority: 'medium',
+      ticketAge: 2,
+    });
+    const tickets = await getAllTickets();
+    expect(tickets).toHaveLength(2);
+    expect(tickets[0]).not.toHaveProperty('urgencyScore');
+    expect(tickets[1]).not.toHaveProperty('urgencyScore');
+  });
+});
+
+describe('createTicket', () => {
+  it('creates a ticket and returns it with urgency properties', async () => {
+    const ticket = await createTicket({
+      title: 'New Ticket',
+      description: 'Creating a new ticket',
+      priority: 'high',
+      ticketAge: 3,
+    });
+    expect(ticket).toHaveProperty('urgencyScore');
+    expect(ticket).toHaveProperty('urgencyLevel');
+  });
+});
+
+describe('getTicketById', () => {
+  it('returns an empty array for a non-existent ticket', async () => {
+    const tickets = await getTicketById(5);
+    expect(tickets).toEqual([]);
+  });
+});
+
+describe('createTicket with invalid priority', () => {
+  it('throws an error for invalid priority', async () => {
+    await expect(
+      createTicket({
+        title: 'Invalid Priority Ticket',
+        description: 'This ticket has an invalid priority',
+        priority: 'invalid-priority',
+        ticketAge: 1,
+      })
+    ).rejects.toThrow('Invalid ticket priority: invalid-priority');
+  });
+});
+
+describe('createTicket with invalid status', () => {
+  it('throws an error for invalid status', async () => {
+    await expect(
+      createTicket({
+        title: 'Invalid Status Ticket',
+        description: 'This ticket has an invalid status',
+        priority: 'low',
+        status: 'invalid-status',
+        ticketAge: 1,
+      })
+    ).rejects.toThrow('Invalid ticket status: invalid-status');
+  });
+});
+
+describe('deleteTicket', () => {
+  it('deletes a ticket and returns true', async () => {
+    const ticket = await createTicket({
+      title: 'Ticket to Delete',
+      description: 'This ticket will be deleted',
+      priority: 'low',
+      ticketAge: 1,
+    });
+    const deleteResult = await deleteTicket(ticket.id);
+    expect(deleteResult).toBe(true);
+    const tickets = await getAllTickets();
+    expect(tickets.find((t) => t.id === ticket.id)).toBeUndefined();
   });
 });
