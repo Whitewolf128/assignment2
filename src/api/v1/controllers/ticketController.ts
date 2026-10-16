@@ -12,7 +12,7 @@ export const getAllTicketsController = async (
 ): Promise<void> => {
     try 
     {
-        const tickets: Ticket[] = await getAllTickets();
+        const tickets = await getAllTickets();
         res.status(HTTP_STATUS.OK).json
         ({
             
@@ -63,7 +63,7 @@ export const createTicketController = async (req: Request, res: Response, next: 
             createdAt,
             ticketAge,
             urgencyScore,
-            UrgencyLevel
+            urgencyLevel
         } = req.body;
 
         const ticket: Ticket =
@@ -76,7 +76,7 @@ export const createTicketController = async (req: Request, res: Response, next: 
             createdAt,
             ticketAge,
             urgencyScore,
-            UrgencyLevel
+            urgencyLevel
         };
         const createdTicket: Ticket = await createTicket(ticket);
 

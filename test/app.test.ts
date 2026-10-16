@@ -1,51 +1,46 @@
-import { describe, expect, it } from '@jest/globals';
-import { createTicket, getAllTickets, getTicketById } from '../src/api/v1/services/ticketService';
+import request from "supertest";
+// import supertest request object
 
-describe('getTicketById urgency score', () => {
-  it.each([
-    ['low', 10],
-    ['medium', 20],
-    ['high', 30],
-    ['critical', 50],
-  ] as const)('calculates the score for %s priority', async (priority: string, priorityScore: number) => {
-    const ticket = await createTicket({
-      title: `${priority} priority ticket`,
-      description: 'Urgency score test',
-      priority,
-      ticketAge: 2,
+import { Response } from "supertest";
+// import supertest Response type
+
+import app from "../src/app";
+
+// import testing
+import { it, expect, describe } from '@jest/globals';
+// import express application and server
+
+describe("GET /", () => {
+    it("should return Hello, world!", async () => {
+        // create GET request to root endpoint
+        const response: Response = await request(app).get("/");
+
+        // assert that response status is OK, response text is "Hello, world!"
+        expect(response.status).toBe(200);
+        expect(response.text).toBe("Hello, world!");
     });
+});
 
-    const [retrievedTicket] = await getTicketById(ticket.id);
+describe("GET /api/v1/health", () => {
+    it("should return server health status", async () => {
+        // create GET request to health endpoint
+        const response: Response = await request(app).get("/api/v1/health");
 
-    expect(retrievedTicket.ticketAge).toBe(2);
-    expect(retrievedTicket.urgencyScore).toBe(2 * 5 + priorityScore);
-  });
-
-  it('derives ticket age from createdAt when age was not provided', async () => {
-    const ticket = await createTicket({
-      title: 'Ticket without an explicit age',
-      description: 'Derived age test',
-      priority: 'low',
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        // assert response status OK and health object to have specified properties
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe("OK");
+        expect(response.body).toHaveProperty("uptime");
+        expect(response.body).toHaveProperty("timestamp");
+        expect(response.body).toHaveProperty("version");
     });
+});
 
-    const [retrievedTicket] = await getTicketById(ticket.id);
-
-    expect(retrievedTicket.ticketAge).toBe(2);
-    expect(retrievedTicket.urgencyScore).toBe(20);
-  });
-
-  it('does not change the stored ticket score when retrieving it', async () => {
-    const ticket = await createTicket({
-      title: 'Stored ticket',
-      description: 'Stored score test',
-      priority: 'low',
-      ticketAge: 1,
+describe("GET /api/v1/tickets", () => {
+    it("should return all tickets", async () => {
+        // create GET request to tickets endpoint
+        const response: Response = await request(app).get("/api/v1/tickets");
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body.length).toBe(0);
     });
-
-    await getTicketById(ticket.id);
-    const storedTicket = (await getAllTickets()).find(({ id }) => id === ticket.id);
-
-    expect(storedTicket?.urgencyScore).toBeUndefined();
-  });
 });

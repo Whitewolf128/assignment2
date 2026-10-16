@@ -7,6 +7,12 @@ const PRIORITY_SCORES: Record<string, number> = {
   high: 30,
   critical: 50,
 };
+const STATUS_LEVELS: Record<string, number> = {
+  open: 1,
+  'in-progress': 1,
+  resolved: 0,
+};
+
 const TICKET_AGE_MULTIPLIER = 5;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -14,8 +20,9 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
  * Retrieves all tickets from storage
  * @returns Array of all tickets
  */
-export const getAllTickets = async (): Promise<Ticket[]> => {
-  return [...tickets];
+type OmitAge = Omit<Ticket, 'ticketAge' | 'urgencyScore' | 'urgencyLevel'>;
+export const getAllTickets = async (): Promise<OmitAge[]> => {
+  return tickets.map(({ ticketAge, urgencyScore, urgencyLevel, ...ticket }) => ticket);
 };
 
 export const getTicketById = async (id: number): Promise<Ticket[]> => {
@@ -29,19 +36,44 @@ export const getTicketById = async (id: number): Promise<Ticket[]> => {
     throw new Error(`Invalid ticket priority: ${ticket.priority}`);
   }
 
+  const statusLevel = STATUS_LEVELS[ticket.status];
+  if (statusLevel === undefined) {
+    throw new Error(`Invalid ticket status: ${ticket.status}`);
+  }
+
   const ticketAge = ticket.ticketAge ?? (() => {
     const createdAtTimestamp = Date.parse(String(ticket.createdAt));
     if (Number.isNaN(createdAtTimestamp)) {
       throw new Error(`Invalid ticket creation date: ${ticket.createdAt}`);
     }
-
     return Math.max(0, Math.floor((Date.now() - createdAtTimestamp) / MILLISECONDS_PER_DAY));
   })();
+  const urgencyScore = (ticketAge * TICKET_AGE_MULTIPLIER + priorityScore) * statusLevel;
+  let urgencyLevel: string;
+
+  switch (true) {
+    case urgencyScore <= 10:
+      urgencyLevel = 'Minimal. Ticket resolved.';
+      break;
+    case urgencyScore <= 25:
+      urgencyLevel = 'Low urgency. Address when capacity allows.';
+      break;
+    case urgencyScore <= 50:
+      urgencyLevel = 'Moderate urgency. Schedule for Attention.';
+      break;
+    case urgencyScore <= 75:
+      urgencyLevel = 'High urgency. Prioritize resolution.';
+      break;
+    default:
+      urgencyLevel = 'Critical urgency. Immediate attention required.';
+      break;
+  }
 
   return [{
     ...ticket,
     ticketAge,
-    urgencyScore: ticketAge * TICKET_AGE_MULTIPLIER + priorityScore,
+    urgencyScore,
+    urgencyLevel
   }];
 };
 

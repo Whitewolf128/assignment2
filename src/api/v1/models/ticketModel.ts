@@ -11,5 +11,5 @@ export interface Ticket {
     createdAt: Date; // Timestamp when the ticket was created
     ticketAge: number; // Age of the ticket in days
     urgencyScore: number; // Calculated urgency score based on priority and age
-    UrgencyLevel: string; // Urgency level derived from the urgency score
+    urgencyLevel: string; // Urgency level derived from the urgency score
 }
