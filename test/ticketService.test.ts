@@ -106,22 +106,27 @@ describe('getTicketById urgency score', () => {
 
 describe('getAllTickets', () => {
   it('returns all tickets without urgency properties', async () => {
-    await createTicket({
+    const initialTickets = await getAllTickets();
+    const firstTicket = await createTicket({
       title: 'Ticket 1',
       description: 'First ticket',
       priority: 'low',
       ticketAge: 1,
     });
-    await createTicket({
+    const secondTicket = await createTicket({
       title: 'Ticket 2',
       description: 'Second ticket',
       priority: 'medium',
       ticketAge: 2,
     });
     const tickets = await getAllTickets();
-    expect(tickets).toHaveLength(2);
-    expect(tickets[0]).not.toHaveProperty('urgencyScore');
-    expect(tickets[1]).not.toHaveProperty('urgencyScore');
+    expect(tickets).toHaveLength(initialTickets.length + 2);
+    for (const id of [firstTicket.id, secondTicket.id]) {
+      const listedTicket = tickets.find((ticket) => ticket.id === id);
+      expect(listedTicket).toBeDefined();
+      expect(listedTicket).not.toHaveProperty('urgencyScore');
+      expect(listedTicket).not.toHaveProperty('urgencyLevel');
+    }
   });
 });
 
@@ -140,7 +145,7 @@ describe('createTicket', () => {
 
 describe('getTicketById', () => {
   it('returns an empty array for a non-existent ticket', async () => {
-    const tickets = await getTicketById(5);
+    const tickets = await getTicketById(Number.MAX_SAFE_INTEGER);
     expect(tickets).toEqual([]);
   });
 });

@@ -1,6 +1,7 @@
 import { Ticket } from '../models/ticketModel';
 
 const tickets: Ticket[] = [];
+let nextTicketId = 1;
 const PRIORITY_SCORES: Record<string, number> = {
   low: 10,
   medium: 20,
@@ -15,6 +16,52 @@ const STATUS_LEVELS: Record<string, number> = {
 
 const TICKET_AGE_MULTIPLIER = 5;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const getTicketAge = (ticket: Partial<Pick<Ticket, 'ticketAge' | 'createdAt'>>): number => {
+  if (ticket.ticketAge !== undefined) {
+    return ticket.ticketAge;
+  }
+
+  const createdAtTimestamp = Date.parse(String(ticket.createdAt));
+  if (Number.isNaN(createdAtTimestamp)) {
+    throw new Error(`Invalid ticket creation date: ${ticket.createdAt}`);
+  }
+  return Math.max(0, Math.floor((Date.now() - createdAtTimestamp) / MILLISECONDS_PER_DAY));
+};
+
+const getUrgencyLevel = (urgencyScore: number): string => {
+  switch (true) {
+    case urgencyScore <= 10:
+      return 'Minimal. Ticket resolved.';
+    case urgencyScore <= 25:
+      return 'Low urgency. Address when capacity allows.';
+    case urgencyScore <= 50:
+      return 'Moderate urgency. Schedule for Attention.';
+    case urgencyScore <= 75:
+      return 'High urgency. Prioritize resolution.';
+    default:
+      return 'Critical urgency. Immediate attention required.';
+  }
+};
+
+const getUrgency = (
+  priority: string,
+  status: string,
+  ticketAge: number
+): Pick<Ticket, 'urgencyScore' | 'urgencyLevel'> => {
+  const priorityScore = PRIORITY_SCORES[priority];
+  if (priorityScore === undefined) {
+    throw new Error(`Invalid ticket priority: ${priority}`);
+  }
+
+  const statusLevel = STATUS_LEVELS[status];
+  if (statusLevel === undefined) {
+    throw new Error(`Invalid ticket status: ${status}`);
+  }
+
+  const urgencyScore = (ticketAge * TICKET_AGE_MULTIPLIER + priorityScore) * statusLevel;
+  return { urgencyScore, urgencyLevel: getUrgencyLevel(urgencyScore) };
+};
 
 /**
  * Retrieves all tickets from storage
@@ -31,49 +78,13 @@ export const getTicketById = async (id: number): Promise<Ticket[]> => {
     return [];
   }
 
-  const priorityScore = PRIORITY_SCORES[ticket.priority];
-  if (priorityScore === undefined) {
-    throw new Error(`Invalid ticket priority: ${ticket.priority}`);
-  }
-
-  const statusLevel = STATUS_LEVELS[ticket.status];
-  if (statusLevel === undefined) {
-    throw new Error(`Invalid ticket status: ${ticket.status}`);
-  }
-
-  const ticketAge = ticket.ticketAge ?? (() => {
-    const createdAtTimestamp = Date.parse(String(ticket.createdAt));
-    if (Number.isNaN(createdAtTimestamp)) {
-      throw new Error(`Invalid ticket creation date: ${ticket.createdAt}`);
-    }
-    return Math.max(0, Math.floor((Date.now() - createdAtTimestamp) / MILLISECONDS_PER_DAY));
-  })();
-  const urgencyScore = (ticketAge * TICKET_AGE_MULTIPLIER + priorityScore) * statusLevel;
-  let urgencyLevel: string;
-
-  switch (true) {
-    case urgencyScore <= 10:
-      urgencyLevel = 'Minimal. Ticket resolved.';
-      break;
-    case urgencyScore <= 25:
-      urgencyLevel = 'Low urgency. Address when capacity allows.';
-      break;
-    case urgencyScore <= 50:
-      urgencyLevel = 'Moderate urgency. Schedule for Attention.';
-      break;
-    case urgencyScore <= 75:
-      urgencyLevel = 'High urgency. Prioritize resolution.';
-      break;
-    default:
-      urgencyLevel = 'Critical urgency. Immediate attention required.';
-      break;
-  }
+  const ticketAge = getTicketAge(ticket);
+  const urgency = getUrgency(ticket.priority, ticket.status, ticketAge);
 
   return [{
     ...ticket,
     ticketAge,
-    urgencyScore,
-    urgencyLevel
+    ...urgency
   }];
 };
 
@@ -85,14 +96,30 @@ export const getTicketById = async (id: number): Promise<Ticket[]> => {
 export const createTicket = async (
   ticketData: Partial<Ticket> & Pick<Ticket, 'title' | 'description'>
 ): Promise<Ticket> => {
+  const priority = ticketData.priority;
+  if (priority === undefined) {
+    throw new Error('Invalid ticket priority: undefined');
+  }
+  const status = ticketData.status ?? 'open';
+  const createdAt = ticketData.createdAt
+    ? new Date(ticketData.createdAt)
+    : new Date();
+  const ticketAge = getTicketAge({
+    ticketAge: ticketData.ticketAge,
+    createdAt,
+  });
+  const urgency = getUrgency(priority, status, ticketAge);
   const newTicket: Ticket = {
     ...ticketData,
-    id: tickets.length + 1, // Simple ID generation based on array length
+    id: nextTicketId++,
     title: ticketData.title,
     description: ticketData.description,
-    status: ticketData.status ?? 'open',
-    createdAt: ticketData.createdAt ?? new Date().toISOString(),
-} as Ticket;
+    priority,
+    status,
+    createdAt,
+    ticketAge,
+    ...urgency,
+  };
 
   tickets.push(newTicket);
   return newTicket;
@@ -123,10 +150,11 @@ export const updateTicket = async (
  * @param id - The ID of the event to delete
  * @throws Error if event with given ID is not found
  */
-export const deleteTicket = async (id: number): Promise<void> => {
+export const deleteTicket = async (id: number): Promise<boolean> => {
     const ticketIndex = tickets.findIndex((ticket: Ticket) => ticket.id === id);
     if (ticketIndex === -1) {
         throw new Error('Ticket not found');
     }
     tickets.splice(ticketIndex, 1);
-}
+    return true;
+};

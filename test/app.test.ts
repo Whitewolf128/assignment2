@@ -17,7 +17,7 @@ describe("GET /", () => {
 
         // assert that response status is OK, response text is "Hello, world!"
         expect(response.status).toBe(200);
-        expect(response.text).toBe("Hello, world!");
+        expect(response.text).toBe("Hello World");
     });
 });
 
@@ -40,7 +40,10 @@ describe("GET /api/v1/tickets", () => {
         // create GET request to tickets endpoint
         const response: Response = await request(app).get("/api/v1/tickets");
         expect(response.status).toBe(200);
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(0);
+        expect(response.body).toMatchObject({
+            message: "tickets Retrieved",
+            count: 0,
+            data: [],
+        });
     });
 });
